@@ -23,4 +23,6 @@ RUN mkdir ${ANDROID_SDK_ROOT} && crossbundle install command-line-tools -i ${AND
 RUN crossbundle install bundletool -v ${BUNDLETOOL_VERSION} -p ${ANDROID_SDK_ROOT}
 RUN echo y | crossbundle install sdkmanager --install "build-tools;${BUILDTOOLS_VERSION}" "ndk;${NDK_VERSION}" "platforms;${PLATFORM_VERSION}"
 
+WORKDIR /src
+
 ENTRYPOINT [ "crossbundle" ]
