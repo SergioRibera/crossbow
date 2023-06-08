@@ -8,6 +8,7 @@ use std::process::Command;
 #[derive(Debug, Clone)]
 pub struct AndroidNdk {
     ndk_path: PathBuf,
+    version: String,
     build_tag: u32,
 }
 
@@ -40,20 +41,24 @@ impl AndroidNdk {
         };
         let build_tag = std::fs::read_to_string(ndk_path.join("source.properties"))
             .map_err(|_| AndroidError::FailedToReadSourceProperties)?;
-        let build_tag = build_tag
+        let (version, build_tag) = build_tag
             .split('\n')
             .find_map(|line| {
                 if let Some((key, value)) = line.split_once('=') {
                     if key.trim() == "Pkg.Revision" {
                         // AOSP writes a constantly-incrementing build version to the patch field.
                         // This number is incrementing across NDK releases.
-                        let mut parts = value.trim().split('.');
+                        let version = value.trim();
+                        let mut parts = version.split('.');
                         let _major = parts.next().unwrap();
                         let _minor = parts.next().unwrap();
                         let patch = parts.next().unwrap();
                         // Can have an optional `XXX-beta1`
                         let patch = patch.split_once('-').map_or(patch, |(patch, _beta)| patch);
-                        return Some(patch.parse().expect("Failed to parse patch field"));
+                        return Some((
+                            version.to_string(),
+                            patch.parse().expect("Failed to parse patch field"),
+                        ));
                     }
                 }
                 None
@@ -66,7 +71,13 @@ impl AndroidNdk {
         Ok(Self {
             ndk_path,
             build_tag,
+            version,
         })
+    }
+
+    /// NDK Version
+    pub fn version(&self) -> &str {
+        self.version.as_ref()
     }
 
     /// Build tag
