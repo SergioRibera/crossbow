@@ -1,4 +1,8 @@
-use crate::error::*;
+use crate::{
+    error::*,
+    types::{AndroidNdk, AndroidSdk},
+};
+use android_manifest::UsesSdk;
 use crossbow_android::embed::CrossbowAndroidAppTemplate;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -6,6 +10,8 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
+
+use super::rep_conf::replace_config_gradle;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct AndroidGradlePlugins {
@@ -39,7 +45,10 @@ pub fn gen_gradle_project(
     assets_dir: &Option<PathBuf>,
     resources_dir: &Option<PathBuf>,
     plugins: &AndroidGradlePlugins,
+    uses_sdk: &Option<UsesSdk>,
 ) -> Result<PathBuf> {
+    let sdk = AndroidSdk::from_env()?;
+    let ndk = AndroidNdk::from_env(sdk.sdk_path())?;
     let gradle_project_path = android_build_dir.join("gradle");
 
     for file_name in CrossbowAndroidAppTemplate::iter() {
@@ -49,11 +58,13 @@ pub fn gen_gradle_project(
         }
         let mut build_gradle = File::create(file_path)?;
         let file = CrossbowAndroidAppTemplate::get(file_name.as_ref()).unwrap();
-        write!(
-            build_gradle,
-            "{}",
-            std::str::from_utf8(file.data.as_ref()).unwrap()
-        )?;
+        let content = std::str::from_utf8(file.data.as_ref()).unwrap();
+        let content = if file_name.eq_ignore_ascii_case("config.gradle") {
+            replace_config_gradle(content, &ndk, &sdk, uses_sdk.clone())?
+        } else {
+            content.to_string()
+        };
+        write!(build_gradle, "{}", content)?;
     }
 
     let mut gradle_properties = File::create(gradle_project_path.join("gradle.properties"))?;

@@ -118,6 +118,7 @@ impl AndroidBuildCommand {
             &assets,
             &resources,
             &context.config.android.plugins,
+            &manifest.uses_sdk
         )?;
 
         config.status_message("Generating", "AndroidManifest.xml")?;
