@@ -26,6 +26,8 @@ pub enum AndroidError {
     GradleDependencyProjectNoBuildFile(PathBuf),
     /// Gradle is not found
     GradleNotFound,
+    /// Java binary is not found
+    JavaNotFound,
     /// Android SDK has no build tools
     BuildToolsNotFound,
     /// Android SDK has no platforms installed
