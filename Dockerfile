@@ -8,7 +8,7 @@ RUN rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-a
 # Install JDK required for build android
 RUN apt-get upgrade && apt-get update && apt install -y wget unzip default-jdk
 # Install Crossbundle
-RUN cargo install --git=https://github.com/dodorare/crossbow crossbundle
+RUN cargo install --git=https://github.com/SergioRibera/crossbow --branch=DockerImage crossbundle
 
 # Generate Environment Variables
 # for automate the next steps
